@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생명 기술 카드 짝 맞추기 게임</title>
+    <style>
+        :root {
+            --bg-color: #f0fdf4;
+            --primary-color: #16a34a;
+            --primary-dark: #15803d;
+            --card-back-bg: #22c55e;
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --agri-color: #15803d;
+            --health-color: #0284c7;
+            --env-color: #d97706;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            position: relative;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            padding: 24px;
+            flex-grow: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* ----- 메인 화면 ----- */
+        #main-screen {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .hero-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            max-width: 500px;
+            line-height: 1.5;
+        }
+
+        .category-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 12px 0;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+        .badge.agri { background-color: var(--agri-color); }
+        .badge.health { background-color: var(--health-color); }
+        .badge.env { background-color: var(--env-color); }
+
+        .difficulty-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: #f0fdf4;
+            color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+
+        .high-score-board {
+            margin-top: 15px;
+            padding: 12px 20px;
+            background-color: #f3f4f6;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* ----- 게임 화면 ----- */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .combo-badge {
+            font-size: 0.8rem;
+            color: #ef4444;
+            font-weight: 800;
+            height: 18px;
+        }
+
+        .card-grid {
+            display: grid;
+            gap: 12px;
+            flex-grow: 1;
+            align-content: center;
+            justify-content: center;
+            perspective: 1000px;
+            margin-bottom: 16px;
+        }
+
+        .grid-easy {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .grid-medium {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .grid-hard {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        @media (max-width: 600px) {
+            .grid-medium { grid-template-columns: repeat(3, 1fr); }
+            .grid-hard { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .card {
+            background-color: transparent;
+            aspect-ratio: 3 / 4;
+            border-radius: 12px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 70px;
+        }
+
+        .card.flipped, .card.matched {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            cursor: default;
+            opacity: 0.85;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .card-front {
+            background-color: var(--card-back-bg);
+            background-image: radial-gradient(#ffffff 15%, transparent 16%);
+            background-size: 12px 12px;
+            color: white;
+        }
+
+        .card-front-inner {
+            width: 36px;
+            height: 36px;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .card-back {
+            background-color: white;
+            transform: rotateY(180deg);
+            border-color: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card[data-category="agri"] .card-back { border-color: var(--agri-color); }
+        .card[data-category="health"] .card-back { border-color: var(--health-color); }
+        .card[data-category="env"] .card-back { border-color: var(--env-color); }
+
+        .card-category-tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 4px;
+        }
+        .tag-agri { background-color: var(--agri-color); }
+        .tag-health { background-color: var(--health-color); }
+        .tag-env { background-color: var(--env-color); }
+
+        .card-icon {
+            font-size: 1.8rem;
+            margin: 4px 0;
+        }
+
+        .card-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            word-break: keep-all;
+            line-height: 1.2;
+            color: var(--text-main);
+        }
+
+        .card-desc {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            word-break: keep-all;
+            line-height: 1.1;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* ----- 결과 화면 ----- */
+        #result-screen {
+            align-items: center;
+            justify-content: flex-start;
+            overflow-y: auto;
+            padding-bottom: 30px;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-grade {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin: 8px 0;
+            text-shadow: 2px 2px 0px #dcfce7;
+        }
+
+        .score-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background-color: #f8fafc;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .summary-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .summary-card .val {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .learning-summary {
+            width: 100%;
+            max-width: 650px;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .learning-summary h3 {
+            font-size: 1rem;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .summary-table th, .summary-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .summary-table th {
+            background-color: #f9fafb;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 모달 디자인 */
+        .modal-backdrop {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .modal-content p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        /* 오디오 토글 */
+        .audio-toggle {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>🧬 생명 기술 카드 게임</h1>
+        <button id="audio-btn" class="audio-toggle" title="소리 켜기/끄기">🔊</button>
+    </header>
+
+    <!-- 1. 메인 화면 -->
+    <section id="main-screen" class="screen active">
+        <div>
+            <h2 class="hero-title">생명 기술 카드 짝 맞추기</h2>
+            <p class="hero-subtitle">중학교 3학년 과학·기술가정 교과 과정 기반<br>3대 생명 기술 분야의 대표 예시와 설명을 짝 맞춰보세요!</p>
+        </div>
+
+        <div class="category-badges">
+            <span class="badge agri">🌾 농업·축산·식품</span>
+            <span class="badge health">🩺 보건·의료</span>
+            <span class="badge env">🌱 환경·에너지</span>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="btn" onclick="startGame('easy')">
+                🌱 쉬움 (8장 / 4짝)
+            </button>
+            <button class="btn" onclick="startGame('medium')">
+                🌿 보통 (12장 / 6짝)
+            </button>
+            <button class="btn" onclick="startGame('hard')">
+                🌳 어려움 (16장 / 8짝)
+            </button>
+            <button class="btn btn-outline" onclick="openInstructions()">
+                📖 게임 설명 & 학습 정보
+            </button>
+        </div>
+
+        <div class="high-score-board" id="high-score-display">
+            🏆 최고 기록: 로딩 중...
+        </div>
+    </section>
+
+    <!-- 2. 게임 화면 -->
+    <section id="game-screen" class="screen">
+        <div class="game-header">
+            <div class="stat-box">
+                <span class="stat-label">남은 시간</span>
+                <span class="stat-value" id="timer-display">60s</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">현재 점수</span>
+                <span class="stat-value" id="score-display">0</span>
+                <span class="combo-badge" id="combo-display"></span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">맞춘 짝</span>
+                <span class="stat-value" id="matches-display">0 / 0</span>
+            </div>
+        </div>
+
+        <div id="card-grid" class="card-grid"></div>
+
+        <div class="game-controls">
+            <button id="hint-btn" class="btn btn-outline" onclick="useHint()">
+                💡 힌트 사용 (-50점)
+            </button>
+            <button class="btn btn-secondary" onclick="confirmQuit()">
+                🏳️ 포기하기
+            </button>
+        </div>
+    </section>
+
+    <!-- 3. 결과 및 학습 요약 화면 -->
+    <section id="result-screen" class="screen">
+        <div class="result-header">
+            <h2>게임 완료!</h2>
+            <div class="result-grade" id="result-grade">S</div>
+            <p id="result-comment" style="color: var(--text-muted);">완벽합니다! 생명 기술 마스터시군요!</p>
+        </div>
+
+        <div class="score-summary-grid">
+            <div class="summary-card">
+                <div class="label">최종 점수</div>
+                <div class="val" id="res-score">0점</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">소요 시간</div>
+                <div class="val" id="res-time">0초</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">최대 콤보</div>
+                <div class="val" id="res-combo">0회</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">힌트 사용</div>
+                <div class="val" id="res-hint">0회</div>
+            </div>
+        </div>
+
+        <!-- 학습 요약표 (오답 노트/개념 정리) -->
+        <div class="learning-summary">
+            <h3>📖 이번 라운드 생명 기술 학습 정리</h3>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>분야</th>
+                        <th>기술 / 예시</th>
+                        <th>개념 및 주요 역할</th>
+                    </tr>
+                </thead>
+                <tbody id="learning-summary-body">
+                    <!-- JS로 동적 생성 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; gap: 12px; width: 100%; max-width: 400px;">
+            <button class="btn" style="flex: 1;" onclick="restartCurrentDifficulty()">🔄 다시 하기</button>
+            <button class="btn btn-outline" style="flex: 1;" onclick="showScreen('main-screen')">🏠 메인으로</button>
+        </div>
+    </section>
+</div>
+
+<!-- 모달 다이얼로그 -->
+<div id="modal" class="modal-backdrop">
+    <div class="modal-content">
+        <h3 id="modal-title">설명</h3>
+        <p id="modal-body">내용</p>
+        <button class="btn" style="width: 100%;" onclick="closeModal()">확인</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. 생명 기술 핵심 데이터베이스 (중3 교육과정)
+    // ==========================================
+    const BIO_DATA = [
+        // 농업, 축산, 식품 분야
+        { id: 'agri_1', category: 'agri', categoryName: '농업·식품', title: '유전자 재조합 작물 (GMO)', desc: '병충해나 가뭄에 잘 견디도록 유전자를 변형한 옥수수, 콩 등', icon: '🌽' },
+        { id: 'agri_2', category: 'agri', categoryName: '농업·식품', title: '복제 양 돌리 (체세포 복제)', desc: '체세포 핵이식 기술을 통해 어버이와 동일한 유전을 가진 동물을 복제', icon: '🐑' },
+        { id: 'agri_3', category: 'agri', categoryName: '농업·식품', title: '전통 발효 식품', desc: '유용한 미생물(유산균, 효모)을 이용해 만든 김치, 치즈, 된장 등', icon: '🧀' },
+        { id: 'agri_4', category: 'agri', categoryName: '농업·식품', title: '씨 없는 수박 (조직 배양)', desc: '식물의 세포나 조직을 떼어내어 우수한 특성의 인공 식물체 대량 증식', icon: '🍉' },
+
+        // 보건, 의료 분야
+        { id: 'health_1', category: 'health', categoryName: '보건·의료', title: '줄기세포 치료제', desc: '다양한 신체 조직 세포로 손상된 장기나 연골을 재생하는 기술', icon: '🧪' },
+        { id: 'health_2', category: 'health', categoryName: '보건·의료', title: '백신 개발', desc: '병원체의 항원을 미리 주입해 감염병 예방 면역을 형성하는 바이오 기술', icon: '💉' },
+        { id: 'health_3', category: 'health', categoryName: '보건·의료', title: '유전자 치료', desc: '비정상 유전자를 정상 유전자로 교체하여 결함 질환을 근본 치료', icon: '🧬' },
+        { id: 'health_4', category: 'health', categoryName: '보건·의료', title: '인공 장기', desc: '3D 바이오 프린팅 기법 등으로 손상된 사람의 장기를 대체 제작', icon: '🫀' },
+
+        // 환경, 에너지 분야
+        { id: 'env_1', category: 'env', categoryName: '환경·에너지', title: '바이오 에탄올 (연료)', desc: '옥수수, 사탕수수 등 곡물·식물 자원을 발효시켜 만든 친환경 연료', icon: '⛽' },
+        { id: 'env_2', category: 'env', categoryName: '환경·에너지', title: '미생물 수질 정화', desc: '오염 물질을 분해하는 특수한 미생물을 활용해 하수나 기름 오염을 정화', icon: '💧' },
+        { id: 'env_3', category: 'env', categoryName: '환경·에너지', title: '생분해성 플라스틱', desc: '옥수수 전분 등 생물 소재로 제작되어 자연 상태에서 미생물에 분해됨', icon: '♻️' },
+        { id: 'env_4', category: 'env', categoryName: '환경·에너지', title: '바이오 가스', desc: '음식물 쓰레기나 가축 분뇨를 미생물로 부패시켜 얻는 메탄가스 에너지', icon: '🔥' }
+    ];
+
+    // ==========================================
+    // 2. 게임 상태 관리 변수
+    // ==========================================
+    let currentDifficulty = 'easy';
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let totalPairs = 0;
+    let score = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let timer = null;
+    let timeLeft = 60;
+    let totalTime = 60;
+    let hintsUsed = 0;
+    let isBoardLocked = false;
+    let audioEnabled = true;
+
+    // Web Audio API 컨텍스트
+    let audioCtx = null;
+
+    // ==========================================
+    // 3. Web Audio API 효과음 생성기
+    // ==========================================
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                audioCtx = new AudioContext();
+            }
+        }
+    }
+
+    function playSound(type) {
+        if (!audioEnabled) return;
+        try {
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'flip') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'match') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'mismatch') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(180, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                // 승리 효과음
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    const subOsc = audioCtx.createOscillator();
+                    const subGain = audioCtx.createGain();
+                    subOsc.connect(subGain);
+                    subGain.connect(audioCtx.destination);
+                    subOsc.type = 'sine';
+                    subOsc.frequency.setValueAtTime(freq, now + i * 0.1);
+                    subGain.gain.setValueAtTime(0.3, now + i * 0.1);
+                    subGain.gain.linearRampToValueAtTime(0.01, now + i * 0.1 + 0.25);
+                    subOsc.start(now + i * 0.1);
+                    subOsc.stop(now + i * 0.1 + 0.25);
+                });
+            }
+        } catch (e) {
+            console.warn('Audio playback error:', e);
+        }
+    }
+
+    // ==========================================
+    // 4. 로컬 스토리지 (기록 저장)
+    // ==========================================
+    function getHighScore(diff) {
+        try {
+            return parseInt(localStorage.getItem(`bio_game_high_${diff}`)) || 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    function saveHighScore(diff, newScore) {
+        try {
+            const current = getHighScore(diff);
+            if (newScore > current) {
+                localStorage.setItem(`bio_game_high_${diff}`, newScore.toString());
+                return true;
+            }
+        } catch (e) {
+            // localStorage 동작 안해도 게임 정상 실행 유지
+        }
+        return false;
+    }
+
+    function updateHighScoreDisplay() {
+        const easy = getHighScore('easy');
+        const medium = getHighScore('medium');
+        const hard = getHighScore('hard');
+        document.getElementById('high-score-display').innerHTML = 
+            `🏆 최고 기록 — 쉬움: <b>${easy}</b>점 | 보통: <b>${medium}</b>점 | 어려움: <b>${hard}</b>점`;
+    }
+
+    // ==========================================
+    // 5. 화면 전환 및 UI 제어
+    // ==========================================
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+
+        if (screenId === 'main-screen') {
+            updateHighScoreDisplay();
+            clearInterval(timer);
+        }
+    }
+
+    function openInstructions() {
+        showModal('📖 게임 설명 & 교육 목표', 
+            `<b>[교육 목표]</b><br>
+            중학교 3학년 과정의 농업·축산·식품, 보건·의료, 환경·에너지 3대 생명 기술 분야의 대표적인 예시와 그 설명을 매칭하며 개념을 다집니다.<br><br>
+            <b>[게임 규칙]</b><br>
+            1. 카드를 2장 뒤집어 짝을 맞춥니다.<br>
+            2. 타입 A(예시) 카드와 타입 B(설명) 카드가 한 짝을 이룹니다.<br>
+            3. 연속 매칭 시 콤보 점수가 누적됩니다.<br>
+            4. 제한 시간 내에 모든 짝을 찾으면 성공합니다!`);
+    }
+
+    function showModal(title, bodyHtml) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerHTML = bodyHtml;
+        document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+    }
+
+    // ==========================================
+    // 6. 게임 핵심 로직 (시작, 섞기, 매칭)
+    // ==========================================
+    function startGame(difficulty) {
+        initAudio();
+        currentDifficulty = difficulty;
+        score = 0;
+        combo = 0;
+        maxCombo = 0;
+        matchedPairs = 0;
+        hintsUsed = 0;
+        flippedCards = [];
+        isBoardLocked = false;
+
+        // 난이도 설정
+        if (difficulty === 'easy') {
+            totalPairs = 4;
+            timeLeft = 60;
+        } else if (difficulty === 'medium') {
+            totalPairs = 6;
+            timeLeft = 75;
+        } else if (difficulty === 'hard') {
+            totalPairs = 8;
+            timeLeft = 90;
+        }
+        totalTime = timeLeft;
+
+        // 데이터 렌더링 준비
+        const selectedBio = shuffleArray([...BIO_DATA]).slice(0, totalPairs);
+        cards = [];
+
+        // 타입 A (기술명/아이콘) 및 타입 B (설명) 쌍 생성
+        selectedBio.forEach(item => {
+            cards.push({
+                pairId: item.id,
+                type: 'A',
+                category: item.category,
+                categoryName: item.categoryName,
+                title: item.title,
+                text: item.title,
+                desc: '대표 기술',
+                icon: item.icon
+            });
+            cards.push({
+                pairId: item.id,
+                type: 'B',
+                category: item.category,
+                categoryName: item.categoryName,
+                title: item.title,
+                text: item.desc,
+                desc: `${item.title}의 설명`,
+                icon: '💡'
+            });
+        });
+
+        cards = shuffleArray(cards);
+
+        // UI 그리드 생성
+        renderGrid();
+        updateGameStats();
+        showScreen('game-screen');
+
+        // 타이머 시작
+        clearInterval(timer);
+        timer = setInterval(tickTimer, 1000);
+    }
+
+    function restartCurrentDifficulty() {
+        startGame(currentDifficulty);
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('card-grid');
+        grid.className = `card-grid grid-${currentDifficulty}`;
+        grid.innerHTML = '';
+
+        cards.forEach((card, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'card';
+            cardEl.dataset.index = index;
+            cardEl.dataset.category = card.category;
+
+            cardEl.innerHTML = `
+                <div class="card-face card-front">
+                    <div class="card-front-inner">?</div>
+                </div>
+                <div class="card-face card-back">
+                    <span class="card-category-tag tag-${card.category}">${card.categoryName}</span>
+                    <div class="card-icon">${card.icon}</div>
+                    <div class="card-text">${card.text}</div>
+                    <div class="card-desc">${card.type === 'A' ? '기술명' : '개념 설명'}</div>
+                </div>
+            `;
+
+            cardEl.addEventListener('click', () => handleCardClick(index, cardEl));
+            grid.appendChild(cardEl);
+        });
+    }
+
+    function handleCardClick(index, cardEl) {
+        if (isBoardLocked) return;
+        if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+        // 카드 뒤집기 실행
+        cardEl.classList.add('flipped');
+        playSound('flip');
+        flippedCards.push({ index, data: cards[index], element: cardEl });
+
+        if (flippedCards.length === 2) {
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        isBoardLocked = true;
+        const [card1, card2] = flippedCards;
+
+        if (card1.data.pairId === card2.data.pairId && card1.index !== card2.index) {
+            // 매칭 성공
+            setTimeout(() => {
+                card1.element.classList.add('matched');
+                card2.element.classList.add('matched');
+                playSound('match');
+
+                matchedPairs++;
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+
+                // 점수 계산 (기본 100점 + 콤보 보너스)
+                const comboBonus = (combo - 1) * 20;
+                score += (100 + comboBonus);
+
+                flippedCards = [];
+                isBoardLocked = false;
+                updateGameStats();
+
+                // 모든 짝을 다 맞췄을 때
+                if (matchedPairs === totalPairs) {
+                    endGame(true);
+                }
+            }, 500);
+        } else {
+            // 매칭 실패
+            setTimeout(() => {
+                playSound('mismatch');
+                card1.element.classList.remove('flipped');
+                card2.element.classList.remove('flipped');
+
+                combo = 0; // 콤보 초기화
+                score = Math.max(0, score - 10); // 오답 감점
+
+                flippedCards = [];
+                isBoardLocked = false;
+                updateGameStats();
+            }, 1000);
+        }
+    }
+
+    function updateGameStats() {
+        document.getElementById('timer-display').innerText = `${timeLeft}s`;
+        document.getElementById('score-display').innerText = score;
+        document.getElementById('matches-display').innerText = `${matchedPairs} / ${totalPairs}`;
+        
+        const comboEl = document.getElementById('combo-display');
+        comboEl.innerText = combo > 1 ? `🔥 ${combo} COMBO!` : '';
+    }
+
+    function tickTimer() {
+        timeLeft--;
+        updateGameStats();
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            endGame(false);
+        }
+    }
+
+    function useHint() {
+        if (isBoardLocked || flippedCards.length > 0) return;
+        if (score < 50 && hintsUsed > 0) {
+            showModal('힌트 불가', '점수가 부족하거나 이미 힌트를 충분히 사용하셨습니다.');
+            return;
+        }
+
+        hintsUsed++;
+        score = Math.max(0, score - 50);
+        updateGameStats();
+
+        // 1.2초 동안 모든 카드 공개
+        isBoardLocked = true;
+        const allCards = document.querySelectorAll('.card:not(.matched)');
+        allCards.forEach(c => c.classList.add('flipped'));
+
+        setTimeout(() => {
+            allCards.forEach(c => c.classList.remove('flipped'));
+            isBoardLocked = false;
+        }, 1200);
+    }
+
+    function confirmQuit() {
+        if (confirm('정말로 게임을 포기하고 메인 화면으로 돌아가시겠습니까?')) {
+            clearInterval(timer);
+            showScreen('main-screen');
+        }
+    }
+
+    // ==========================================
+    // 7. 게임 종료 및 결과 처리
+    // ==========================================
+    function endGame(isWin) {
+        clearInterval(timer);
+
+        if (isWin) {
+            playSound('win');
+            // 시간 보너스 적용
+            const timeBonus = timeLeft * 10;
+            score += timeBonus;
+
+            // 최고 기록 갱신 체크
+            saveHighScore(currentDifficulty, score);
+
+            // 등급 산정
+            let grade = 'C';
+            let comment = '조금 더 연습해 볼까요? 생명 기술 개념을 다시 복습해 보세요!';
+            if (score >= 1000) {
+                grade = 'S';
+                comment = '명예의 전당 등극! 생명 기술에 대한 이해도가 완벽합니다!';
+            } else if (score >= 700) {
+                grade = 'A';
+                comment = '훌륭합니다! 대부분의 생명 기술 개념을 잘 숙지하고 있네요.';
+            } else if (score >= 400) {
+                grade = 'B';
+                comment = '좋은 시도였습니다! 아쉽게 놓친 개념들을 확인해 보세요.';
+            }
+
+            document.getElementById('result-grade').innerText = grade;
+            document.getElementById('result-comment').innerText = comment;
+        } else {
+            document.getElementById('result-grade').innerText = 'F';
+            document.getElementById('result-comment').innerText = '제한 시간이 초과되었습니다. 다시 도전해 보세요!';
+        }
+
+        document.getElementById('res-score').innerText = `${score}점`;
+        document.getElementById('res-time').innerText = `${totalTime - timeLeft}초`;
+        document.getElementById('res-combo').innerText = `${maxCombo}회`;
+        document.getElementById('res-hint').innerText = `${hintsUsed}회`;
+
+        // 이번 라운드 학습 요약표 생성
+        buildLearningSummaryTable();
+
+        showScreen('result-screen');
+    }
+
+    function buildLearningSummaryTable() {
+        const tbody = document.getElementById('learning-summary-body');
+        tbody.innerHTML = '';
+
+        // 현재 사용된 카드에서 중복 제거된 BIO_DATA 추출
+        const uniquePairIds = [...new Set(cards.map(c => c.pairId))];
+        const currentBioData = BIO_DATA.filter(item => uniquePairIds.includes(item.id));
+
+        currentBioData.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="card-category-tag tag-${item.category}">${item.categoryName}</span></td>
+                <td><b>${item.icon} ${item.title}</b></td>
+                <td>${item.desc}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ==========================================
+    // 8. 오디오 토글 및 초기화
+    // ==========================================
+    document.getElementById('audio-btn').addEventListener('click', () => {
+        audioEnabled = !audioEnabled;
+        document.getElementById('audio-btn').innerText = audioEnabled ? '🔊' : '🔇';
+    });
+
+    // 페이지 로드시 초기 최고기록 불러오기
+    window.onload = function() {
+        updateHighScoreDisplay();
+    };
+</script>
+</body>
+</html>
